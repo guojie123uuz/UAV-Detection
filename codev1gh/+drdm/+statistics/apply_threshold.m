@@ -1,0 +1,23 @@
+function existence = apply_threshold(scan,calibration,evaluation)
+%APPLY_THRESHOLD 应用与当前单轮搜索匹配的门限结果。
+%
+% 输入：scan：加径搜索；calibration：训练门限；evaluation：独立评价。
+% 输出：existence：存在性判定、被检验路径及统计证据。
+%
+% 证据由配置标识关联到同一固定条件搜索程序。
+
+assert(strcmp(scan.procedure_id,calibration.procedure_id) && ...
+    strcmp(scan.procedure_id,evaluation.procedure_id) && ...
+    strcmp(calibration.calibration_id,evaluation.calibration_id), ...
+    'drdm:CalibrationMismatch','Observation, threshold and evaluation procedures differ.');
+validated = evaluation.conditionally_validated && scan.complete;
+paths = struct('tau_s',{},'nu_hz',{},'gain_complex',{});
+if ~isempty(scan.best_fit)
+    paths = scan.best_fit.paths;
+end
+existence = struct('accepted',validated && scan.statistic>calibration.threshold, ...
+    'tested_paths',paths, ...
+    'conditionally_validated',validated,'statistic',scan.statistic,'threshold',calibration.threshold, ...
+    'procedure_id',scan.procedure_id,'context_id',scan.context_id, ...
+    'full_pipeline_validated',false,'scope',scan.scope);
+end
